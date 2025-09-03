@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sheraton Clone — Hotel</title>
+<style>
+  :root{--accent:#0f6ef0;--muted:#6b7280;--card:#fff;--radius:12px}
+  *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+  body{margin:0;background:#f4f7fb;color:#0b1220}
+  .top{background:#fff;padding:14px;box-shadow:0 6px 18px rgba(12,18,40,0.04)}
+  .container{max-width:1100px;margin:18px auto;padding:0 18px}
+  .grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+  .hero{border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(12,18,40,0.06)}
+  .hero img{width:100%;height:320px;object-fit:cover;display:block}
+  .details{background:var(--card);padding:14px;border-radius:10px;margin-top:12px;box-shadow:0 6px 18px rgba(12,18,40,0.04)}
+  .book-card{background:linear-gradient(180deg,var(--card),#fbfdff);padding:16px;border-radius:12px;box-shadow:0 10px 30px rgba(15,110,240,0.06)}
+  label{display:block;font-weight:700;margin-top:10px}
+  input, select, textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #e9f1ff;margin-top:6px}
+  .btn-primary{background:linear-gradient(90deg,var(--accent),#7b5afc);color:white;padding:12px;border-radius:10px;border:none;width:100%;font-weight:700;margin-top:12px;cursor:pointer}
+  @media (max-width:980px){ .grid{grid-template-columns:1fr} .hero img{height:240px} }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="container" style="display:flex;justify-content:space-between;align-items:center">
+    <div style="font-weight:800">Sheraton Clone</div>
+    <div><a href="listings.html" style="text-decoration:none;color:var(--accent)">Back to results</a></div>
+  </div>
+</div>
+
+<main class="container">
+  <div id="content" class="grid">
+    <!-- left: hero + details -->
+    <div>
+      <div class="hero" id="heroBlock">
+        <!-- image inserted by JS -->
+      </div>
+
+      <div class="details" id="hotelDetails">
+        <!-- inserted by JS -->
+      </div>
+
+      <div class="details" style="margin-top:12px">
+        <h4 style="margin:0 0 8px 0">Reviews</h4>
+        <div style="color:var(--muted)">4.8 · Excellent — Guests praise location and comfort.</div>
+      </div>
+    </div>
+
+    <!-- right: booking card -->
+    <aside>
+      <div class="book-card">
+        <div style="font-weight:800;font-size:18px" id="roomPrice">USD 120 / night</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:6px" id="stayDates">Select dates</div>
+
+        <form id="bookingForm" style="margin-top:12px">
+          <label>Full name</label>
+          <input id="guestName" required placeholder="Jane Doe">
+
+          <label>Email</label>
+          <input id="guestEmail" type="email" required placeholder="you@example.com">
+
+          <label>Phone</label>
+          <input id="guestPhone" required placeholder="+92 3xx xxx xxxx">
+
+          <label>Check-in</label>
+          <input id="ci" type="date" required>
+
+          <label>Check-out</label>
+          <input id="co" type="date" required>
+
+          <label>Special requests</label>
+          <textarea id="requests" rows="3" placeholder="Late check-in, high floor..."></textarea>
+
+          <button type="submit" class="btn-primary">Confirm Booking</button>
+        </form>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+  // same dataset as listings (in a real app this would come from server)
+  const HOTELS = [
+    {id:'h1', name:'Oceanview Sheraton', city:'Karachi', price:180, rating:4.9, img:'https://images.unsplash.com/photo-1501117716987-c8e3b6b2d2f1?q=80&w=1200&auto=format&fit=crop', amenities:['wifi','pool','breakfast']},
+    {id:'h2', name:'City Center Grand', city:'Karachi', price:95, rating:4.7, img:'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=1200&auto=format&fit=crop', amenities:['wifi','gym','breakfast']},
+    {id:'h3', name:'Mountain Retreat', city:'Gilgit', price:140, rating:4.8, img:'https://images.unsplash.com/photo-1553389053-7e4d7c8d5d10?q=80&w=1200&auto=format&fit=crop', amenities:['breakfast']},
+    {id:'h4', name:'Seoul Luxury Suites', city:'Seoul', price:220, rating:4.9, img:'https://images.unsplash.com/photo-1542317854-6f2fcc2c36f6?q=80&w=1200&auto=format&fit=crop', amenities:['wifi','gym','pool']},
+    {id:'h5', name:'Riverside Inn', city:'Lahore', price:70, rating:4.2, img:'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=1200&auto=format&fit=crop', amenities:['wifi']},
+    {id:'h6', name:'Skyline Business', city:'Singapore', price:250, rating:4.6, img:'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1200&auto=format&fit=crop', amenities:['wifi','gym','breakfast']},
+  ];
+
+  // parse query params
+  function getParam(name){
+    return new URLSearchParams(window.location.search).get(name);
+  }
+  const hotelId = getParam('id');
+  const initialCheckin = getParam('checkin') || '';
+  const initialCheckout = getParam('checkout') || '';
+
+  const hotel = HOTELS.find(h=>h.id === hotelId) || HOTELS[0];
+
+  // populate UI
+  document.getElementById('heroBlock').innerHTML = `<img src="${hotel.img}" alt="${hotel.name}">`;
+  document.getElementById('hotelDetails').innerHTML = `
+    <h2 style="margin:0">${hotel.name}</h2>
+    <div style="color:var(--muted);margin-top:6px">${hotel.city} · ${hotel.amenities.join(' · ')}</div>
+    <div style="margin-top:12px;display:flex;align-items:center;gap:12px">
+      <div style="font-weight:800;font-size:20px">$${hotel.price} <span style="font-size:13px;color:var(--muted)">/night</span></div>
+      <div style="color:#f59e0b;font-weight:700">★ ${hotel.rating}</div>
+    </div>
+    <p style="margin-top:12px;color:var(--muted)">Stylish rooms, top amenities and great service. This demo uses client-side storage; in production you'd save bookings to a server and send emails.</p>
+  `;
+  document.getElementById('roomPrice').innerText = `USD ${hotel.price} / night`;
+  if(initialCheckin && initialCheckout) document.getElementById('stayDates').innerText = `${initialCheckin} → ${initialCheckout}`;
+  document.getElementById('ci').value = initialCheckin;
+  document.getElementById('co').value = initialCheckout;
+
+  // booking handling
+  document.getElementById('bookingForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = document.getElementById('guestName').value.trim();
+    const email = document.getElementById('guestEmail').value.trim();
+    const phone = document.getElementById('guestPhone').value.trim();
+    const ci = document.getElementById('ci').value;
+    const co = document.getElementById('co').value;
+    const requests = document.getElementById('requests').value.trim();
+
+    if(!name || !email || !phone || !ci || !co){
+      alert('Please fill all required fields.');
+      return;
+    }
+    // calculate nights
+    const ndays = Math.max(1, Math.round((new Date(co) - new Date(ci)) / (1000*60*60*24)));
+    const total = hotel.price * ndays;
+
+    const booking = {
+      id: 'BKG-' + Date.now(),
+      hotelId: hotel.id,
+      hotelName: hotel.name,
+      guestName: name,
+      guestEmail: email,
+      guestPhone: phone,
+      checkin: ci,
+      checkout: co,
+      nights: ndays,
+      total,
+      requests,
+      createdAt: new Date().toISOString()
+    };
+
+    // store in localStorage "bookings"
+    const existing = JSON.parse(localStorage.getItem('bookings') || '[]');
+    existing.push(booking);
+    localStorage.setItem('bookings', JSON.stringify(existing));
+
+    // redirect to confirmation page with booking id
+    window.location.href = `confirm.html?bid=${encodeURIComponent(booking.id)}`;
+  });
+</script>
+</body>
+</html>
